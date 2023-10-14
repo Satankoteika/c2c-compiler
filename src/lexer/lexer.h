@@ -30,6 +30,8 @@ namespace ctc::lexer
     class lexer
     {
     private:
+        lexer_options options;
+
         std::string m_source;
 
         size_t m_pos, m_line, m_suboffset;
@@ -45,8 +47,6 @@ namespace ctc::lexer
         {
             if (is_end() || m_source.at(m_pos) != to_find)
                 return false;
-
-            this->m_pos++;
 
             return true;
         }
@@ -67,7 +67,7 @@ namespace ctc::lexer
         }
 
     public:
-        explicit lexer(lexer_options const options);
+        explicit inline lexer(lexer_options options_for_lexing) : options(options_for_lexing) {}
 
         lexer_results tokenize_from_source(std::string&& source);
     };
