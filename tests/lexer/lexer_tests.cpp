@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#define SIMPLE_TEST_SOURCE ("// Is Comment,\n +-=/--==--=-=<<>>>>>>")
+#define SIMPLE_TEST_SOURCE ("int a = 20;")
 
 int main()
 {

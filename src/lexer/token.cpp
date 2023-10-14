@@ -83,9 +83,9 @@ namespace ctc::lexer
 
         {token_type::p_notequal, "p_notequal"},
         {token_type::p_xor, "p_xor"},
-        {token_type::p_and, "p_and"},
+        {token_type::p_or, "p_or"},
         {token_type::p_double_ampersand, "p_double_ampersand"},
-        {token_type::p_double_and, "p_double_and"},
+        {token_type::p_double_or, "p_double_or"},
         {token_type::p_question, "p_question"},
 
         {token_type::p_colon, "p_colon"},
@@ -104,12 +104,14 @@ namespace ctc::lexer
 
         {token_type::p_amperequal, "p_amperequal"},
         {token_type::p_xorequal, "p_xorequal"},
-        {token_type::p_and_equal, "p_and_equal"},
+        {token_type::p_or_equal, "p_or_equal"},
         {token_type::p_comma, "p_comma"},
 
         {token_type::l_true, "l_true"},
         {token_type::l_false, "l_false"},
         {token_type::l_char_literal, "l_char_literal"},
+
+        {token_type::identifier, "identifier"},
 
         {token_type::l_string_literal, "l_string_literal"},
         {token_type::l_number_literal, "l_number_literal"},

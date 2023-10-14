@@ -9,7 +9,8 @@ namespace ctc::lexer
 {
     struct lexer_error
     {
-        inline lexer_error(std::string&& error_what, size_t error_line, size_t error_pos) : {}
+        inline lexer_error(std::string&& error_what, size_t error_line, size_t error_pos)
+                                                                                        :  what(std::move(error_what)), line(error_line), pos(error_pos) {}
 
         std::string what;
 
@@ -69,8 +70,8 @@ namespace ctc::lexer
         }
 
         void tokenize_string_literal(lexer_results& results) noexcept;
-        void tokenize_number_literal();
-        void tokenize_identifier();
+        void tokenize_number_literal(lexer_results& results);
+        void tokenize_identifier(lexer_results& results);
 
     public:
         explicit inline lexer(lexer_options options_for_lexing) : options(options_for_lexing) {}
@@ -80,3 +81,4 @@ namespace ctc::lexer
 }
 
 #endif
+

@@ -28,8 +28,8 @@ namespace ctc::lexer
         p_leftgreater, p_rightgreater, // < and >
         p_leftgreater_and_equal, p_rightgreater_and_equal, // <= and >=
         p_equalequal, p_notequal, // == and !=
-        p_xor, p_and, // ^ and |
-        p_double_ampersand, p_double_and, // && and ||
+        p_xor, p_or, // ^ and |
+        p_double_ampersand, p_double_or, // && and ||
         p_question, p_colon, // ? and :
         p_semicolon, p_tripledot, // ; and ...
 
@@ -38,7 +38,9 @@ namespace ctc::lexer
         p_plusequal, p_minusequal, // += and -=
         p_leftshift_equal, p_rightshift_equal, // <<= and >>=
         p_amperequal, p_xorequal, // &= and ^=
-        p_and_equal, p_comma, // |= and ,
+        p_or_equal, p_comma, // |= and ,
+
+        identifier,
 
         // literals - l_
         l_true, l_false,
@@ -53,7 +55,7 @@ namespace ctc::lexer
         token_type type;
         std::string lexeme;
 
-        explicit inline token(token_type type_of_token, std::string&& lexeme_of_token = "") : type(type_of_token), lexeme(std::move(lexeme_of_token)) {}
+        explicit inline token(token_type type_of_token, std::string&& lexeme_of_token) : type(type_of_token), lexeme(std::move(lexeme_of_token)) {}
 
         std::string get_text() const noexcept; // Return field type as std::string
     };
