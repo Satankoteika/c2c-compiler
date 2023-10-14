@@ -1,8 +1,9 @@
 add_library(src ${LIB_TYPE}
-    tokenizer/token.h
-    tokenizer/tokenizer.h
+    lexer/lexer.h
+    lexer/token.h
 
-    tokenizer/tokenizer.cpp
+    lexer/token.cpp
+    lexer/lexer.cpp
 )
 
 include_directories(./)
