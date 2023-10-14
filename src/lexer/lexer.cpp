@@ -165,6 +165,14 @@ namespace ctc::lexer
 
                 case '/':
 
+                    if ( match('/') )
+                    {
+                        while (!is_end() && peek(0) != '\n')
+                            next();
+
+                        break;
+                    }
+
                     if ( match('=') )
                     {
                         results.tokens.emplace_back(token_type::p_divequal);

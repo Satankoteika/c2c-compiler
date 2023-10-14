@@ -2,7 +2,7 @@
 
 #include <cstdio>
 
-#define SIMPLE_TEST_SOURCE ("+++---+>><<<<---*&&&&&&&&--+++!!!!!!!!!....")
+#define SIMPLE_TEST_SOURCE ("// Is Comment,\n +-=/--==--=-=<<>>>>>>")
 
 int main()
 {
