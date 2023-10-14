@@ -311,10 +311,37 @@ namespace ctc::lexer
                 case ',': results.tokens.emplace_back(token_type::p_comma); break;
 
                 default:
+
+
+                    results.errors.emplace_back("unrecognized character", m_line, m_pos);
                     break;
             }
         }
 
         return results;
     }
+
+    void ctc::lexer::lexer::tokenize_string_literal(lexer_results& results) noexcept
+    {
+        while ( m_source[m_pos] != '"' && !is_end() )
+        {
+            if (m_source[m_pos] == '\n')
+                m_line++;
+
+            next();
+        }
+
+        if (is_end())
+        {
+            results.errors.emplace_back("incomplete string literal", m_line, m_pos);
+            return;
+        }
+
+        next(); // skip the " symbol
+
+        results.tokens.emplace_back( token {token_type::l_string_literal, m_source.substr(m_suboffset, m_pos - m_suboffset)});
+    }
+
+    void tokenize_number_literal();
+    void tokenize_identifier();
 };
