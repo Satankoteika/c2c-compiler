@@ -10,4 +10,3 @@ add_library(src ${LIB_TYPE}
     preprocessor/pp_lexer.cpp
 )
 
-include_directories(./)

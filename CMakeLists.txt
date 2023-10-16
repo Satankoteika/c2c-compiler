@@ -6,10 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 option(DEBUG "Compile with debug symbols and without optimization" OFF)
 option(BUILD_SHARED_LIB "Build as shared library(default: runtime is static library)" OFF)
 
-include_directories(
-    lexer/
-)
-
 if (BUILD_SHARED_LIB)
     set(LIB_TYPE SHARED)
 else()
@@ -43,4 +39,9 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 endif()
 
+include_directories(${PROJECT_SOURCE_DIR}/src)
+
+enable_testing()
+
 add_subdirectory(src)
+add_subdirectory(tests)
