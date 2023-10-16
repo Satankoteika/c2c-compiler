@@ -6,14 +6,17 @@
 namespace ctc::preprocessor {
 
 enum class pp_token_type {
-    // header names
-    h_char_seq,
-    q_char_seq,
-
+    // preprocessing_tokens - pp_
+    pp_include,
+    pp_header_name, // = q-char-sequence or h-char-sequence
     pp_number,
     pp_identifier,
     pp_char_constant,
     pp_string_literal,
+
+    // preprocessing keywords - k_
+    k_include,
+    k_define,
 
     // punctuators - p_
     p_leftbracket, // [

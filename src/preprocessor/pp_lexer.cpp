@@ -83,7 +83,9 @@ void pp_lexer::tokenize_pp_identifier(pp_lexer_results &results)
         break;
     }
 
-    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos), pp_token_type::pp_identifier, m_line, m_pos);
+    std::string lexeme = m_source.substr(m_suboffset, m_pos);
+
+    results.tokens.emplace_back(lexeme, keywords_token_table.contains(lexeme) ? keywords_token_table.at(lexeme) : pp_token_type::pp_identifier, m_line, m_pos);
 }
 
 void pp_lexer::tokenize_pp_char_constant(pp_lexer_results &results)
@@ -113,6 +115,13 @@ void pp_lexer::tokenize_pp_char_constant(pp_lexer_results &results)
                 case '\"':
                 case '\?':
                 case '\\':
+                case 'a':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                case 'v':
                     break;
 
                 case 'x':
@@ -126,8 +135,47 @@ void pp_lexer::tokenize_pp_char_constant(pp_lexer_results &results)
             }
         }
     }
+
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos), pp_token_type::pp_char_constant, m_line, m_pos);
 }
 
-// void pp_lexer::tokenize_pp_string_literal(){}
+void pp_lexer::tokenize_pp_string_literal(pp_lexer_results &results)
+{
+}
+
+void pp_lexer::tokenize_pp_header_name(pp_lexer_results &results)
+{
+    skip_spaces();
+
+    if (m_source[m_pos] != '<' && m_source[m_pos] == '\"')
+        results.errors.emplace_back("Invalid header name!", m_pos, m_line);
+
+    if (m_source[m_pos] == '\"') {
+        for (char current = next(); true; current = next()) {
+            if (current == '\n')
+                results.errors.emplace_back("Invalid header name!", m_pos, m_line);
+
+            if (current == '\"')
+                break;
+        }
+    }
+
+    if (m_source[m_pos] == '<') {
+        for (char current = next(); true; current = next()) {
+            if (current == '\n')
+                results.errors.emplace_back("Invalid header name!", m_pos, m_line);
+
+            if (current == '>')
+                break;
+        }
+    }
+
+    skip_spaces();
+
+    if (m_source[m_pos] == '\n')
+        results.errors.emplace_back("Unexpected token after header name!", m_pos, m_line);
+
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos), pp_token_type::pp_header_name, m_line, m_pos);
+}
 
 };

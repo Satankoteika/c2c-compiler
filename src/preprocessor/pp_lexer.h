@@ -3,6 +3,7 @@
 
 #include "preprocessor/pp_token.h"
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace ctc::preprocessor {
@@ -20,8 +21,28 @@ struct pp_lexer_results {
 };
 
 class pp_lexer {
+    inline static const std::unordered_map<std::string, pp_token_type> keywords_token_table {
+        std::make_pair("include", pp_token_type::k_include),
+        std::make_pair("define", pp_token_type::k_define)
+    };
+
     std::string m_source;
     size_t m_pos, m_line, m_suboffset;
+
+    inline bool is_space(char ch)
+    {
+        return ch == ' ' || ch == '\t' || ch == '\v' || ch == '\f' || ch == '\r';
+    }
+
+    inline void skip_spaces()
+    {
+        while (is_space(peek_next())) {
+            next();
+        }
+
+        if (is_space(m_source[m_pos]))
+            next();
+    }
 
     inline char next()
     {
@@ -55,6 +76,7 @@ class pp_lexer {
     void tokenize_pp_identifier(pp_lexer_results &results);
     void tokenize_pp_char_constant(pp_lexer_results &results);
     void tokenize_pp_string_literal(pp_lexer_results &results);
+    void tokenize_pp_header_name(pp_lexer_results &results);
 };
 
 };
