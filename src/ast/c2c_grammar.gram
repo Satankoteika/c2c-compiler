@@ -22,7 +22,7 @@
 												Grammar
 
 
-S -> (using_decl | stmt_var_decl | stmt_if | stmt_for | stmt_while | stmt_fn_decl | stmt_switch | stmt_enum_decl)*
+S -> (using_decl | stmt_var_decl | stmt_if | stmt_for | stmt_while | stmt_fn_decl | stmt_switch | stmt_enum_decl | stmt_struct_decl)*
 
 primary_expression -> (identifier | number_literal | string_literal | '(' expression ')')
 
@@ -58,13 +58,30 @@ unary_operator -> '&' | '*' | '+' | '-' | '~' | '!'
 
 stmt_var_decl -> storage_modifier? type_qualifier? type '*'? identifier ('=' primary_expression)? ';'
 
+stmt_struct_decl -> 'struct' identifier struct-body ';'
+struct-body -> (struct_field | struct_bitfield | struct_dtor | struct_fn_member)*
+
+struct_field -> access-modifier? type_name '*'? identifier ('{' primary_expression '}')? ';'
+struct_fn_member -> access-modifier? type_name '*'? identifier '(' fn_param_decl? ')' (';' | block)
+struct_bitfield -> access_modifier? type_name identifier ':' number_literal ';'
+struct_dtor -> access_modifier? '~' identifier (';' | block)
+
+access-modifier -> ('public' | 'private')
+
+stmt_enum_decl -> 'enum' identifier '{' enum_list '}' ';'
+enum_list -> identifier ('=' number_literal)? (',' identifier ('=' number_literal)?)*
+
 stmt_if -> 'if' '(' conditional_expression ')' block ('else' stmt_if | 'else' block)
 stmt_while -> 'while' '(' conditional_expression ')' block
+
+stmt_fn_decl -> storage_modifier? type_name '*'? identifier '(' fn_param_decl? ')' (';' | block)
+fn_param_decl -> type_name '*'? identifier (',' type_name '*'? identifier)*
 
 stmt_for -> 'for' '(' (for_decl)? ';' argument_expression_list? ';' argument_expression_list? ')' block?
 for_decl -> type_qualifier? '*'? type identifier ('=' primary_expression)?
 
-block -> '{' (stmt_var_decl | stmt_if | stmt_for | stmt_while | stmt_switch)* '}'
+stmt_return -> 'return' primary_identifier ';'
+block -> '{' (stmt_var_decl | stmt_if | stmt_for | stmt_while | stmt_switch | stmt_return)* '}'
 
 using_decl -> 'using' identifier '=' type_name ';'
 
