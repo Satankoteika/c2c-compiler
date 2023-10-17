@@ -13,6 +13,7 @@ namespace ctc::lexer
         k_for, k_goto, k_if, k_inline, k_int, k_long, k_return, k_short,
         k_signed, k_sizeof, k_static, k_struct, k_switch, k_typedef,
         k_union, k_unsigned, k_void, k_volatile, k_while, k_bool,
+        k_using,
 
         // punctuators - p_
         p_leftbracket, p_rightbracket, // [ and ]
