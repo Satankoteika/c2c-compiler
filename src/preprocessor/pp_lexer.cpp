@@ -3,37 +3,23 @@
 
 namespace ctc::preprocessor {
 
-static bool is_digit(char ch)
-{
-    return isdigit(static_cast<unsigned char>(ch));
-}
+static bool is_digit(char ch) { return isdigit(static_cast<unsigned char>(ch)); }
 
-static bool is_alpha(char ch)
-{
-    return isalpha(static_cast<unsigned char>(ch));
-}
+static bool is_alpha(char ch) { return isalpha(static_cast<unsigned char>(ch)); }
 
-static bool is_alphanum(char ch)
-{
-    return isalnum(static_cast<unsigned char>(ch));
-}
+static bool is_alphanum(char ch) { return isalnum(static_cast<unsigned char>(ch)); }
 
-static bool is_hex(char ch)
-{
-    return isxdigit(static_cast<unsigned char>(ch));
-}
+static bool is_hex(char ch) { return isxdigit(static_cast<unsigned char>(ch)); }
 
-static bool is_oct(char ch)
-{
-    return '0' > ch && ch < '8';
-}
+static bool is_oct(char ch) { return '0' <= ch && ch <= '8'; }
 
 void pp_lexer::check_escape_sequence(pp_lexer_results &results)
 {
     if (is_oct(peek_next())) {
         for (size_t i = 0; i < 3; i++) {
-            if (!is_oct(next()))
+            if (!is_oct(peek_next()))
                 break;
+            next();
         }
         return;
     }
@@ -70,8 +56,11 @@ void pp_lexer::tokenize_pp_number(pp_lexer_results &results)
         return;
     }
 
-    for (char current = m_source[m_pos]; !is_end(); current = next()) {
-        if ((current == 'e' || current == 'p' || current == 'E' || current == 'P') && (peek_next() == '+' || peek_next() == '-')) {
+    for (char current; !is_end(); next()) {
+        current = peek_next();
+
+        if ((current == 'e' || current == 'p' || current == 'E' || current == 'P')
+            && (peek(2) == '+' || peek(2) == '-')) {
             next(); // an additional next call to capture sign
             continue;
         }
@@ -82,7 +71,8 @@ void pp_lexer::tokenize_pp_number(pp_lexer_results &results)
         break;
     }
 
-    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset), pp_token_type::pp_number, m_line_offset, next_is_first_in_line);
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset + 1),
+        pp_token_type::pp_number, m_line_offset - (m_pos - m_suboffset), first_in_line);
 }
 
 void pp_lexer::tokenize_pp_identifier(pp_lexer_results &results)
@@ -92,11 +82,14 @@ void pp_lexer::tokenize_pp_identifier(pp_lexer_results &results)
         return;
     }
 
-    for (char current = m_source[m_pos]; !is_end(); current = next()) {
-        if (current == '_' || is_alpha(current))
+    for (char current; !is_end(); next()) {
+        current = peek_next();
+
+        if (current == '_' || is_alphanum(current))
             continue;
 
-        if (current == '\\' && (peek_next() == 'u')) {
+        if (current == '\\' && (peek(2) == 'u')) {
+            next();
             next();
             for (size_t i = 0; i < 4; i++) {
                 if (!is_hex(next())) {
@@ -107,7 +100,8 @@ void pp_lexer::tokenize_pp_identifier(pp_lexer_results &results)
             continue;
         }
 
-        if (current == '\\' && (peek_next() == 'U')) {
+        if (current == '\\' && (peek(2) == 'U')) {
+            next();
             next();
             for (size_t i = 0; i < 8; i++) {
                 if (!is_hex(next())) {
@@ -121,36 +115,56 @@ void pp_lexer::tokenize_pp_identifier(pp_lexer_results &results)
         break;
     }
 
-    std::string lexeme = m_source.substr(m_suboffset, m_pos - m_suboffset);
-    results.tokens.emplace_back(lexeme, keywords_token_table.contains(lexeme) ? keywords_token_table.at(lexeme) : pp_token_type::pp_identifier, m_line_offset, next_is_first_in_line);
+    std::string lexeme = m_source.substr(m_suboffset, m_pos - m_suboffset + 1);
+    results.tokens.emplace_back(lexeme,
+        keywords_token_table.contains(lexeme) ? keywords_token_table.at(lexeme)
+                                              : pp_token_type::pp_identifier,
+        m_line_offset - (m_pos - m_suboffset), first_in_line);
 }
 
 void pp_lexer::tokenize_pp_char_constant(pp_lexer_results &results)
 {
-    if (m_source[m_pos] != 'L' && m_source[m_pos] != 'l' && m_source[m_pos] != 'u' && m_source[m_pos] != '\'') {
+    if (m_source[m_pos] != 'L' && m_source[m_pos] != 'u' && m_source[m_pos] != 'U'
+        && m_source[m_pos] != '\'') {
         results.errors.emplace_back("Wrong character constant!", m_line_offset, m_line);
         return;
     }
 
     if (m_source[m_pos] != '\'')
         next();
-    for (char current = next(); true; current = next()) {
+    for (char current; !is_end(); next()) {
+        current = peek_next();
+
+        if (current == '\n') {
+            results.errors.emplace_back("Unexpected newline!", m_line_offset, m_line);
+            return;
+        }
+
         if (current == '\'') {
-            next();
+            next(); // capture trailing '
             break;
         }
 
         if (current == '\\') {
+            next(); // capture trailing backslash before checking escape sequence
             check_escape_sequence(results);
+
+            if (next() != '\'') // capture trailing '
+                results.errors.emplace_back("Wrong character constant!", m_line_offset,
+                    m_line); // if trailing symbol is not a ' - push error
+
+            break;
         }
     }
 
-    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset), pp_token_type::pp_char_constant, m_line_offset, next_is_first_in_line);
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset + 1),
+        pp_token_type::pp_char_constant, m_line_offset - (m_pos - m_suboffset), first_in_line);
 }
 
 void pp_lexer::tokenize_pp_string_literal(pp_lexer_results &results)
 {
-    if (m_source[m_pos] != 'L' && m_source[m_pos] != 'U' && m_source[m_pos] != 'u' && m_source[m_pos] != '\"') {
+    if (m_source[m_pos] != 'L' && m_source[m_pos] != 'U' && m_source[m_pos] != 'u'
+        && m_source[m_pos] != '\"') {
         results.errors.emplace_back("Invalid string literal!", m_line_offset, m_line);
         return;
     }
@@ -164,7 +178,9 @@ void pp_lexer::tokenize_pp_string_literal(pp_lexer_results &results)
         return;
     }
 
-    for (char current = next(); !is_end(); current = next()) {
+    for (char current; !is_end(); next()) {
+        current = peek_next();
+
         if (current == '\"') {
             next();
             break;
@@ -175,7 +191,8 @@ void pp_lexer::tokenize_pp_string_literal(pp_lexer_results &results)
         }
     }
 
-    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset), pp_token_type::pp_char_constant, m_line_offset, next_is_first_in_line);
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset + 1),
+        pp_token_type::pp_string_literal, m_line_offset - (m_pos - m_suboffset), first_in_line);
 }
 
 void pp_lexer::tokenize_pp_header_name(pp_lexer_results &results)
@@ -184,7 +201,9 @@ void pp_lexer::tokenize_pp_header_name(pp_lexer_results &results)
         results.errors.emplace_back("Invalid header name!", m_line_offset, m_line);
 
     if (m_source[m_pos] == '\"') {
-        for (char current = next(); !is_end(); current = next()) {
+        for (char current; !is_end(); next()) {
+            current = peek_next();
+
             if (current == '\n')
                 results.errors.emplace_back("Invalid header name!", m_line_offset, m_line);
 
@@ -196,7 +215,9 @@ void pp_lexer::tokenize_pp_header_name(pp_lexer_results &results)
     }
 
     if (m_source[m_pos] == '<') {
-        for (char current = next(); !is_end(); current = next()) {
+        for (char current; !is_end(); next()) {
+            current = peek_next();
+
             if (current == '\n')
                 results.errors.emplace_back("Invalid header name!", m_line_offset, m_line);
 
@@ -212,23 +233,15 @@ void pp_lexer::tokenize_pp_header_name(pp_lexer_results &results)
     if (m_source[m_pos] == '\n')
         results.errors.emplace_back("Unexpected token after header name!", m_line_offset, m_line);
 
-    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset - 1), pp_token_type::pp_header_name, m_line_offset, next_is_first_in_line);
+    results.tokens.emplace_back(m_source.substr(m_suboffset, m_pos - m_suboffset + 1),
+        pp_token_type::pp_header_name, m_line_offset - (m_pos - m_suboffset), first_in_line);
 }
 
-pp_lexer_results pp_lexer::tokenize_from_source(std::string &&source)
+void pp_lexer::tokenize_line(pp_lexer_results &result)
 {
-    m_source = std::move(source);
-
-    m_pos = 0;
-    m_line = 1;
-    m_suboffset = 0;
-    m_line_offset = 0;
-
-    pp_lexer_results result {};
-
-    for (char current = m_source[m_pos]; !is_end();) {
+    for (char current = m_source[m_pos]; !is_end(); next()) {
         skip_spaces();
-        m_line_offset = m_pos - m_suboffset;
+
         m_suboffset = m_pos;
         current = m_source[m_pos];
 
@@ -238,40 +251,62 @@ pp_lexer_results pp_lexer::tokenize_from_source(std::string &&source)
         }
 
         switch (current) {
+
             case '\n':
-                //                m_line_offset = 0;
-                //                next_is_first_in_line = true;
+                m_line++;
+                m_line_offset = 0;
+                first_in_line = true;
+
+                next();
+                return;
+
+            case '#':
+                result.tokens.emplace_back(
+                    "#", pp_token_type::p_hash, m_line_offset, first_in_line);
                 break;
 
             default:
 
                 if (is_digit(current)) {
                     tokenize_pp_number(result);
-                    continue;
+                    break;
                 }
 
                 if (current == '\'' || peek_next() == '\'') {
                     tokenize_pp_char_constant(result);
-                    continue;
+                    break;
                 }
 
-                if (current == '\"' || peek_next() == '\"' || (current == 'u' && peek_next() == '8' && peek(2) == '\"')) {
+                if (current == '\"' || peek_next() == '\"'
+                    || (current == 'u' && peek_next() == '8' && peek(2) == '\"')) {
                     tokenize_pp_string_literal(result);
-                    continue;
+                    break;
                 }
 
                 tokenize_pp_identifier(result);
-                continue;
+                break;
         }
 
-        if (m_source[m_pos] != '\n')
-            next_is_first_in_line = false;
-        else {
-            m_line_offset = 0;
-            next_is_first_in_line = true;
-        }
+        first_in_line = false;
+    }
+}
 
-        next();
+pp_lexer_results pp_lexer::tokenize_from_source(std::string &&source)
+{
+    m_source = std::move(source);
+
+    m_pos = 0;
+    m_suboffset = 0;
+
+    m_line = 0;
+    m_line_offset = 0;
+
+    first_in_line = true;
+
+    pp_lexer_results result {};
+
+    while (!is_end()) {
+        tokenize_line(result);
     }
 
     return result;
@@ -287,7 +322,9 @@ std::string tokens_to_text(std::vector<pp_token> &tokens)
                 result += " ";
             }
         }
+
         result += token.lexem;
+        result += " ";
     }
     return result;
 }
