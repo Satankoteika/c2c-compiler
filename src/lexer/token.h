@@ -57,6 +57,7 @@ namespace ctc::lexer
         std::string lexeme;
 
         explicit inline token(token_type type_of_token, std::string&& lexeme_of_token) : type(type_of_token), lexeme(std::move(lexeme_of_token)) {}
+        explicit inline token(token const& token_instance) : type(token_instance.type), lexeme(token_instance.lexeme) {}
 
         std::string get_text() const noexcept; // Return field type as std::string
     };
