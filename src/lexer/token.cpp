@@ -1,5 +1,4 @@
 #include "lexer/token.h"
-
 #include <unordered_map>
 
 namespace ctc::lexer {
@@ -7,8 +6,10 @@ static std::unordered_map<token_type, std::string> token_type_to_string_table {
     { token_type::k_auto, "k_auto" },
     { token_type::k_break, "k_break" },
 
-    { token_type::k_case, "k_case" },
-    { token_type::k_char, "k_char" },
+    {token_type::k_using, "k_using"},
+
+    {token_type::k_case, "k_case"},
+    {token_type::k_char, "k_char"},
 
     { token_type::k_const, "k_const" },
     { token_type::k_continue, "k_continue" },

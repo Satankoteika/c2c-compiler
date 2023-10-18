@@ -310,7 +310,6 @@ pp_lexer_results pp_lexer::tokenize_from_source(std::string &&source)
     }
 
     result.tokens.emplace_back("", pp_token_type::eof, 0, false);
-
     return result;
 }
 

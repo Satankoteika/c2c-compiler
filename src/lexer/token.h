@@ -13,6 +13,7 @@ namespace ctc::lexer
         k_for, k_goto, k_if, k_inline, k_int, k_long, k_return, k_short,
         k_signed, k_sizeof, k_static, k_struct, k_switch, k_typedef,
         k_union, k_unsigned, k_void, k_volatile, k_while, k_bool,
+        k_using,
 
         // punctuators - p_
         p_leftbracket, p_rightbracket, // [ and ]
@@ -56,6 +57,7 @@ namespace ctc::lexer
         std::string lexeme;
 
         explicit inline token(token_type type_of_token, std::string&& lexeme_of_token) : type(type_of_token), lexeme(std::move(lexeme_of_token)) {}
+        explicit inline token(token const& token_instance) : type(token_instance.type), lexeme(token_instance.lexeme) {}
 
         std::string get_text() const noexcept; // Return field type as std::string
     };

@@ -24,6 +24,8 @@ namespace ctc::lexer
         {"auto", token_type::k_auto},
         {"break", token_type::k_break},
 
+        {"using", token_type::k_using},
+
         {"case", token_type::k_case},
         {"char", token_type::k_char},
 
