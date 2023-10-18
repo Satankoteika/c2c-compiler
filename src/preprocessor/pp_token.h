@@ -79,7 +79,7 @@ struct pp_token {
     pp_token_type type;
 
     size_t line_offset;
-    bool first_in_line;
+    bool first_in_line = false;
 };
 
 };
