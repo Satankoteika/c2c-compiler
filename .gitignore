@@ -1,3 +1,4 @@
 tests/lexer/build/
 src/build_unix_makefile/
 *.user
+build_unix_makefile/
