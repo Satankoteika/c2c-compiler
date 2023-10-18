@@ -58,6 +58,11 @@ unary_operator -> '&' | '*' | '+' | '-' | '~' | '!'
 
 stmt_var_decl -> storage_modifier? type_qualifier? type '*'? identifier ('=' primary_expression)? ';'
 
+stmt_switch -> 'switch' '(' primary_expression ')' switch-block ';'
+switch-block -> '{' (switch-case | switch-default)* '}'
+switch-case -> 'case' primary_expression ':' (block | 'break' ';')?
+switch-case -> 'default' ':' (block | 'break' ';')
+
 stmt_struct_decl -> 'struct' identifier struct-body ';'
 struct-body -> (struct_field | struct_bitfield | struct_dtor | struct_fn_member)*
 
