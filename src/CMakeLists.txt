@@ -18,4 +18,7 @@ add_library(src ${LIB_TYPE}
     ast/ast_visitor.cpp
 )
 
+<<<<<<< HEAD
 include_directories(./ lexer/)
+=======
+>>>>>>> e709dab (Preprocessor lexer completed, simple test added, eeds automatition)
