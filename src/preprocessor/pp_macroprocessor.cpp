@@ -5,19 +5,27 @@ namespace ctc::preprocessor {
 pp_obj_macro pp_macroprocessor::parse_obj_macro()
 {
     pp_obj_macro result;
-    while (!is_end() && !peek_next().first_in_line) {
-        result.tokens.push_back(next());
+    for (pp_token current = m_tokens[m_pos]; !is_end(); current = m_tokens[m_pos]) {
+        result.tokens.push_back(current);
+
+        if (next().first_in_line)
+            break;
     }
     return result;
 }
 
 void pp_macroprocessor::parse_macro(pp_macroprocessor_intermediate_results &intermediate)
 {
+    if (m_tokens[m_pos].type != pp_token_type::pp_identifier) {
+        return;
+    }
+
     if (peek_next().type == pp_token_type::p_leftparentheses) {
         return;
     }
 
-    intermediate.obj_macros[m_tokens[m_pos].lexem] = parse_obj_macro();
+    std::string macro_name = m_tokens[m_pos].lexem;
+    intermediate.obj_macros[macro_name] = parse_obj_macro();
 }
 
 void pp_macroprocessor::parse_line(
@@ -25,33 +33,31 @@ void pp_macroprocessor::parse_line(
 {
 
     if (m_tokens[m_pos].type == pp_token_type::p_hash && m_tokens[m_pos].first_in_line) {
-        for (pp_token current = next(); !is_end(); next()) {
-            switch (current.type) {
-                case pp_token_type::k_define:
-                    next();
-                    parse_macro(intermediate);
-                    break;
-                default:
-                    return;
-            }
+        pp_token current = next();
+
+        switch (current.type) {
+            case pp_token_type::k_define:
+                next();
+                parse_macro(intermediate);
+                break;
+            default:
+                return;
         }
 
         return;
     }
 
-    for (pp_token current = m_tokens[m_pos]; !is_end() && !m_tokens[m_pos].first_in_line;
-         current = next()) {
-
+    for (pp_token current = m_tokens[m_pos]; !is_end(); current = m_tokens[m_pos]) {
         if (m_tokens[m_pos].type == pp_token_type::pp_identifier
             && intermediate.obj_macros.contains(m_tokens[m_pos].lexem)) {
             for (auto &token : intermediate.obj_macros.at(m_tokens[m_pos].lexem).tokens) {
                 result.tokens.push_back(token);
             }
+        } else
+            result.tokens.push_back(current);
 
+        if (next().first_in_line)
             return;
-        }
-
-        result.tokens.push_back(current);
     }
 }
 

@@ -47,7 +47,7 @@ class pp_macroprocessor {
         return (m_pos + 1 >= m_tokens.size()) ? m_tokens[m_tokens.size() - 1] : m_tokens[m_pos + 1];
     }
 
-    bool is_end() { return m_pos + 1 >= m_tokens.size(); }
+    bool is_end() { return m_pos >= m_tokens.size(); }
 
     pp_obj_macro parse_obj_macro();
 
