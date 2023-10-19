@@ -309,6 +309,11 @@ pp_lexer_results pp_lexer::tokenize_from_source(std::string &&source)
         tokenize_line(result);
     }
 
+<<<<<<< HEAD
+    result.tokens.emplace_back("", pp_token_type::eof, 0, false);
+
+=======
+>>>>>>> c2c-team-main
     return result;
 }
 

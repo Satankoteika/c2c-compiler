@@ -1,9 +1,9 @@
 #ifndef AST_H
 #define AST_H
 
-#include "ast_visitor.h"
+#include "ast/ast_visitor.h"
+#include "lexer/token.h"
 
-#include <token.h>
 #include <memory>
 
 namespace ctc::ast
