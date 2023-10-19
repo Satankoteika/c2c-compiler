@@ -11,14 +11,21 @@ struct pp_macroprocessor_results {
     std::vector<pp_token> tokens;
 };
 
-struct pp_macro {
-    // std::string identifier;
+struct pp_obj_macro {
     std::vector<pp_token> tokens;
+};
+
+// struct pp_func_macro {
+//     // std::string identifier;
+//     std::vector<pp_token> tokens;
+// };
+
+struct pp_macroprocessor_intermediate_results {
+    std::unordered_map<std::string, pp_obj_macro> obj_macros {};
 };
 
 class pp_macroprocessor {
     std::vector<pp_token> m_tokens;
-<<<<<<< HEAD
     size_t m_pos;
 
     inline const pp_token &next()
@@ -40,11 +47,14 @@ class pp_macroprocessor {
         return (m_pos + 1 >= m_tokens.size()) ? m_tokens[m_tokens.size() - 1] : m_tokens[m_pos + 1];
     }
 
-    bool is_end() { return m_pos + 1 >= m_tokens.size(); }
-=======
+    bool is_end() { return m_pos >= m_tokens.size(); }
 
-    void make_macro(size_t index, std::unordered_map<std::string, pp_macro> &macros);
->>>>>>> c2c-team-main
+    pp_obj_macro parse_obj_macro();
+
+    void parse_macro(pp_macroprocessor_intermediate_results &intermediate);
+    void subprocess_tokens(std::vector<pp_token> &tokens);
+    void parse_line(
+        pp_macroprocessor_results &result, pp_macroprocessor_intermediate_results &intermediate);
 
 public:
     pp_macroprocessor_results process_tokens(std::vector<pp_token> &&tokens);
