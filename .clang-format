@@ -1,0 +1,5 @@
+BasedOnStyle: WebKit
+TabWidth: 4
+PointerAlignment: Right
+IndentCaseLabels: true
+ColumnLimit: 100
