@@ -1,4 +1,7 @@
-BasedOnStyle: WebKit
+BasedOnStyle: Microsoft
+
+Language: Cpp
+
 TabWidth: 4
 PointerAlignment: Right
 IndentCaseLabels: true
