@@ -1,0 +1,2 @@
+#!/bin/bash
+find . -regex '.*\.\(cpp\|h\|cc\|cxx\)' -exec clang-format -style=file -i {} \;
