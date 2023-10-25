@@ -1,74 +1,115 @@
 #ifndef PP_MACROPROCESSOR_H
 #define PP_MACROPROCESSOR_H
 
+#include "preprocessor/pp_common.h"
 #include "preprocessor/pp_token.h"
+#include <list>
+#include <optional>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
-namespace ctc::preprocessor
-{
+namespace ctc::preprocessor {
 
-    struct pp_macroprocessor_results
+inline static const pp_token eof_token { "", pp_token_type::eof, 0, true };
+inline static const pp_token eol_token { "", pp_token_type::eol, 0, true };
+
+struct pp_macroprocessor_results {
+    std::vector<pp_token> tokens;
+    std::vector<pp_error> errors;
+};
+
+struct pp_obj_macro {
+    std::vector<pp_token> tokens;
+};
+
+struct pp_func_macro_arg {
+    size_t position;
+    size_t index;
+
+    bool stringify;
+};
+
+struct pp_func_macro {
+    bool variadic;
+    size_t arg_count;
+    std::vector<pp_func_macro_arg> args;
+    std::vector<pp_token> tokens;
+};
+
+struct pp_macroprocessor_intermediate_results {
+    std::unordered_map<std::string, pp_obj_macro> obj_macros {};
+    std::unordered_map<std::string, pp_func_macro> func_macros {};
+};
+
+struct pp_macroprocessor_conditionals {
+    bool included;
+    pp_token_type type;
+    size_t depth;
+
+    std::list<pp_token>::iterator begin;
+};
+
+class pp_macroprocessor {
+    std::list<pp_token> m_tokens;
+    std::list<pp_token>::iterator current;
+
+    std::vector<pp_macroprocessor_conditionals> conditionals;
+    size_t conditionals_depth = 0;
+
+    inline const pp_token &next()
     {
-        std::vector<pp_token> tokens;
-    };
+        current++;
+        if (current == m_tokens.end())
+            return eof_token;
+        return *current;
+    }
 
-    struct pp_obj_macro
+    inline const pp_token &next_in_line()
     {
-        std::vector<pp_token> tokens;
-    };
+        if (peek_next().first_in_line)
+            return eol_token;
 
-    // struct pp_func_macro {
-    //     // std::string identifier;
-    //     std::vector<pp_token> tokens;
-    // };
+        return next();
+    }
 
-    struct pp_macroprocessor_intermediate_results
+    inline const pp_token &peek_next() const
     {
-        std::unordered_map<std::string, pp_obj_macro> obj_macros{};
-    };
+        auto temp = current;
+        temp++;
+        return (temp == m_tokens.end()) ? eof_token : *temp;
+    }
 
-    class pp_macroprocessor
+    inline const pp_token &peek_next_in_line()
     {
-        std::vector<pp_token> m_tokens;
-        size_t m_pos;
+        if (peek_next().first_in_line)
+            return eol_token;
 
-        inline const pp_token &next()
-        {
-            m_pos++;
-            if (m_pos >= m_tokens.size())
-                return m_tokens[m_tokens.size() - 1];
-            return m_tokens[m_pos];
-        }
+        return peek_next();
+    }
 
-        inline const pp_token &peek(size_t index) const
-        {
-            return (m_pos + index >= m_tokens.size()) ? m_tokens[m_tokens.size() - 1]
-                                                      : m_tokens[m_pos + index];
-        }
+    bool is_end() { return current == m_tokens.end(); }
 
-        inline const pp_token &peek_next() const
-        {
-            return (m_pos + 1 >= m_tokens.size()) ? m_tokens[m_tokens.size() - 1]
-                                                  : m_tokens[m_pos + 1];
-        }
+    pp_token evaluate_stringify(
+        std::list<pp_token>::iterator first, std::list<pp_token>::iterator last);
+    std::optional<pp_token> evaluate_concat(pp_token &first, pp_token &second);
 
-        bool is_end()
-        {
-            return m_pos >= m_tokens.size();
-        }
+    void substitute_func_like_call(pp_macroprocessor_intermediate_results &intermediate);
+    void recursive_substitution(pp_macroprocessor_intermediate_results &intermediate);
 
-        pp_obj_macro parse_obj_macro();
+    void parse_func_like(
+        pp_macroprocessor_results &result, pp_macroprocessor_intermediate_results &intermediate);
+    void parse_line(
+        pp_macroprocessor_results &result, pp_macroprocessor_intermediate_results &intermediate);
 
-        void parse_macro(pp_macroprocessor_intermediate_results &intermediate);
-        void subprocess_tokens(std::vector<pp_token> &tokens);
-        void parse_line(pp_macroprocessor_results &result,
-                        pp_macroprocessor_intermediate_results &intermediate);
+    void skip(pp_macroprocessor_results &result);
+    void evaluate_conditionals(
+        pp_macroprocessor_results &result, pp_macroprocessor_intermediate_results &intermediate);
 
-      public:
-        pp_macroprocessor_results process_tokens(std::vector<pp_token> &&tokens);
-    };
+public:
+    pp_macroprocessor_results process_tokens(std::vector<pp_token> &tokens);
+};
 
-}; // namespace ctc::preprocessor
+};
 
 #endif // PP_MACROPROCESSOR_H
