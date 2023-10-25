@@ -7,3 +7,5 @@ PointerAlignment: Right
 IndentCaseLabels: true
 ColumnLimit: 100
 NamespaceIndentation: All
+BreakConstructorInitializers: BeforeColon
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
